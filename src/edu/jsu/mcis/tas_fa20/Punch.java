@@ -13,11 +13,12 @@ public class Punch {
     // You should update all of the below functions to do what they say they do
     // You will need to create various private variables inside this class
     public int getId() {
-        return 0;
+        return -1;
     }
 
     public void setId(int id) {
-
+        // The punch ID is only ever assigned after the class is created.
+        // So you will need to initialize the variable with a default value of `-1`
     }
 
 

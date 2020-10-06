@@ -10,7 +10,9 @@ I have assigned one file/class to each of you guys to work on.
 
 Each file needs to be updated to match what the unit tests expect. I have scaffolded out the required functions within each class so all you have to do is write the code to make the functions return or do what is expected.
 
-If you have any questions please text (or email) me.
+I have created unit tests for each class, you can run the specific unit test for your file to test your code.
+
+If you have any questions or are struggling please text (or email) me.
 
 ___
 
