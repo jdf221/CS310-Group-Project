@@ -2,6 +2,8 @@ package edu.jsu.mcis.tas_fa20;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class TASDatabase {
     private Connection connection = null;
@@ -109,7 +111,37 @@ public class TASDatabase {
     }
 
     public ArrayList<Punch> getDailyPunchList(Badge badge, long timestamp) {
-        return null;
+        try {
+            PreparedStatement selectPunchesOnDay = connection.prepareStatement("SELECT id FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ?");
+
+            GregorianCalendar dayBeginning = new GregorianCalendar();
+            dayBeginning.setTimeInMillis(timestamp);
+            dayBeginning.set(Calendar.HOUR_OF_DAY, 0);
+            dayBeginning.set(Calendar.MINUTE, 0);
+            dayBeginning.set(Calendar.SECOND, 0);
+            dayBeginning.set(Calendar.MILLISECOND, 0);
+
+            GregorianCalendar dayEnd = new GregorianCalendar();
+            dayEnd.setTimeInMillis(dayBeginning.getTimeInMillis());
+            dayEnd.add(Calendar.DAY_OF_MONTH, 1);
+
+            System.out.println(new Timestamp(dayBeginning.getTimeInMillis()));
+            System.out.println(new Timestamp(dayEnd.getTimeInMillis()));
+            selectPunchesOnDay.setString(1, badge.getBadgeId());
+            selectPunchesOnDay.setTimestamp(2, new Timestamp(dayBeginning.getTimeInMillis()));
+            selectPunchesOnDay.setTimestamp(3, new Timestamp(dayEnd.getTimeInMillis()));
+            ResultSet result = selectPunchesOnDay.executeQuery();
+
+            ArrayList<Punch> punchArray = new ArrayList<Punch>();
+            while(result.next()) {
+                punchArray.add(this.getPunch(result.getInt(1)));
+            }
+
+            return punchArray;
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            return null;
+        }
     }
 
     public void close() {

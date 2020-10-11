@@ -9,9 +9,12 @@ import static org.junit.Assert.*;
 public class PunchTest {
     @Test
     public void testPrintOriginalTimestamp() {
+        Punch thePunch = new Punch(new Badge("FF591F68", "Miller, Robert K"), 2, 0);
+        thePunch.setOriginaltimestamp(1602457926);
+
         assertEquals(
-                "#FF591F68 CLOCKED IN: WED 09/05/2018 07:00:07",
-                new Punch(new Badge("FF591F68", "Miller, Robert K"), 2, 0).printOriginalTimestamp()
+                "#FF591F68 CLOCKED IN: SUN 10/11/2020 06:12:06",
+                thePunch.printOriginalTimestamp()
         );
     }
 
