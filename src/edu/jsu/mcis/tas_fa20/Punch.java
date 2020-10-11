@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Punch {
+    private Badge Badge;
     private String adjustmentType = null;
     private int PunchID = -1;
     private int TerminalID = -1;
