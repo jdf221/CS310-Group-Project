@@ -1,7 +1,6 @@
 package edu.jsu.mcis.tas_fa20;
 
 public class Punch {
-    private int id = -1;
     private String adjustmentType = null;
 
     public Punch(Badge badge, int terminalId, int punchTypeId) {
@@ -18,7 +17,6 @@ public class Punch {
     }
 
     public void setId(int id) {
-        this.id = id;
         // The punch ID is only ever assigned after the class is created.
         // So you will need to initialize the variable with a default value of `-1`
     }
@@ -41,7 +39,7 @@ public class Punch {
         // "#badgeId CLOCKED IN: WED 09/05/2018 07:00:07"
         // Look into the GregorianCalendar class
 
-        return "" + this.id;
+        return null;
     }
 
     public long getOriginaltimestamp() {
