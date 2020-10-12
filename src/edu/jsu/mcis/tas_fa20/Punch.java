@@ -9,8 +9,9 @@ public class Punch {
     private int PunchID = -1;
     private int TerminalID = -1;
     private int punchTypeID = -1;
-    private SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    private SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
     private GregorianCalendar gcal;
+    private Date date;
 
     public Punch(Badge badge, int termId, int punchTId) {
         // Punch IDs are assigned by the database so you need to set the punch ID to a default value (I recommend -1) then we can use setId() to set the real ID
@@ -20,6 +21,7 @@ public class Punch {
         TerminalID = termId;
         punchTypeID = punchTId;
         gcal = new GregorianCalendar();
+        date = new Date();
         // You should also set the originalTimestamp to the current timestamp in this constructor
     }
 
@@ -57,7 +59,19 @@ public class Punch {
         else if (punchTypeID == 1) { clock = " CLOCKED OUT: "; }
         else { clock = " TIMED OUT: "; }
         System.out.println(gcal.getTime().getTime());
-        return ("#" + getBadgeid() + clock + gcal.get(gcal.DAY_OF_WEEK) + " " + formatter.format(gcal.getTime().getTime()));
+        return ("#" + getBadgeid() + clock + dowFormat(gcal) + " " + formatter.format(gcal.getTime().getTime()));
+    }
+
+    public String dowFormat (GregorianCalendar gc) {
+        String result;
+        if (gc.get(gc.DAY_OF_WEEK) == 1) { result = "SUN"; }
+        else if (gc.get(gc.DAY_OF_WEEK) == 2) { result = "MON"; }
+        else if (gc.get(gc.DAY_OF_WEEK) == 3) { result = "TUE"; }
+        else if (gc.get(gc.DAY_OF_WEEK) == 4) { result = "WED"; }
+        else if (gc.get(gc.DAY_OF_WEEK) == 5) { result = "THU"; }
+        else if (gc.get(gc.DAY_OF_WEEK) == 6) { result = "FRI"; }
+        else { result = "SAT"; }
+        return result;
     }
 
     public long getOriginaltimestamp() {
