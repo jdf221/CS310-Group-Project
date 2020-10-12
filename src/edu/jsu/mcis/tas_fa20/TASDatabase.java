@@ -47,7 +47,7 @@ public class TASDatabase {
 
             result.next();
             Punch punch = new Punch(this.getBadge(result.getString(3)), result.getInt(2), result.getInt(5));
-            punch.setOriginaltimestamp(result.getTimestamp(4).getTime() * 1000);
+            punch.setOriginaltimestamp(result.getTimestamp(4).getTime());
             punch.setId(result.getInt(1));
 
             return punch;
@@ -93,7 +93,7 @@ public class TASDatabase {
     public int insertPunch(Punch punch) {
         try {
             PreparedStatement insertPunch = connection.prepareStatement("INSERT INTO punch VALUES(?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
-            insertPunch.setInt(1, punch.getId());
+            insertPunch.setInt(1, 0);
             insertPunch.setInt(2, punch.getTerminalid());
             insertPunch.setString(3, punch.getBadgeid());
             insertPunch.setTimestamp(4, new Timestamp(punch.getOriginaltimestamp()));
@@ -105,6 +105,7 @@ public class TASDatabase {
 
             return autoIncrementResult.getInt(1);
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println(e.toString());
             return -1;
         }
@@ -112,8 +113,8 @@ public class TASDatabase {
 
     public ArrayList<Punch> getDailyPunchList(Badge badge, long timestamp) {
         try {
-            PreparedStatement selectPunchesOnDay = connection.prepareStatement("SELECT id FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ?");
-            PreparedStatement selectFirstPunchOnNextDay = connection.prepareStatement("SELECT id, punchtypeid FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ? ORDER BY originaltimestamp ASC");
+            PreparedStatement selectPunchesOnDay = this.connection.prepareStatement("SELECT id FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ?");
+            PreparedStatement selectFirstPunchOnNextDay = this.connection.prepareStatement("SELECT id, punchtypeid FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ? ORDER BY originaltimestamp ASC LIMIT 1");
 
             GregorianCalendar firstDayBeginning = new GregorianCalendar();
             firstDayBeginning.setTimeInMillis(timestamp);
@@ -124,10 +125,10 @@ public class TASDatabase {
 
             GregorianCalendar firstDayEnding = new GregorianCalendar();
             firstDayEnding.setTimeInMillis(firstDayBeginning.getTimeInMillis());
-            firstDayBeginning.set(Calendar.HOUR_OF_DAY, 23);
-            firstDayBeginning.set(Calendar.MINUTE, 59);
-            firstDayBeginning.set(Calendar.SECOND, 59);
-            firstDayBeginning.set(Calendar.MILLISECOND, 999);
+            firstDayEnding.set(Calendar.HOUR_OF_DAY, 23);
+            firstDayEnding.set(Calendar.MINUTE, 59);
+            firstDayEnding.set(Calendar.SECOND, 59);
+            firstDayEnding.set(Calendar.MILLISECOND, 999);
 
             GregorianCalendar secondDayBeginning = new GregorianCalendar();
             secondDayBeginning.add(Calendar.DAY_OF_MONTH, 1);
@@ -160,10 +161,10 @@ public class TASDatabase {
             selectFirstPunchOnNextDay.setTimestamp(3, new Timestamp(secondDayEnding.getTimeInMillis()));
             ResultSet secondResult = selectFirstPunchOnNextDay.executeQuery();
 
-            System.out.println(selectFirstPunchOnNextDay);
             secondResult.next();
             int punchTypeId = secondResult.getInt(2);
-            if(punchTypeId == 1 || punchTypeId == 2) {
+
+            if(punchTypeId == 2 || punchTypeId == 3) {
                 punchArray.add(this.getPunch(secondResult.getInt(1)));
             }
 

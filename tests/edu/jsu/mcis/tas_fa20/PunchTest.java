@@ -11,7 +11,7 @@ public class PunchTest {
         thePunch.setOriginaltimestamp((long)1602457926 * 1000);
 
         assertEquals(
-                "#FF591F68 CLOCKED IN: SUN 10/11/2020 06:12:06",
+                "#FF591F68 CLOCKED OUT: SUN 10/11/2020 18:12:06",
                 thePunch.printOriginalTimestamp()
         );
     }

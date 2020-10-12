@@ -9,7 +9,7 @@ public class Punch {
     private int PunchID = -1;
     private int TerminalID = -1;
     private int punchTypeID = -1;
-    private SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
+    private SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
     private GregorianCalendar gcal;
     private Date date;
 
@@ -55,10 +55,10 @@ public class Punch {
         // Look into the GregorianCalendar class
 
         String clock; // 0 = clocked in, 1 = clocked out, 2 = timed out
-        if (punchTypeID == 0) { clock = " CLOCKED IN: "; }
-        else if (punchTypeID == 1) { clock = " CLOCKED OUT: "; }
+        if (punchTypeID == 0) { clock = " CLOCKED OUT: "; }
+        else if (punchTypeID == 1) { clock = " CLOCKED IN: "; }
         else { clock = " TIMED OUT: "; }
-        System.out.println(gcal.getTime().getTime());
+
         return ("#" + getBadgeid() + clock + dowFormat(gcal) + " " + formatter.format(gcal.getTime().getTime()));
     }
 
