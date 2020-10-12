@@ -1,16 +1,14 @@
 package edu.jsu.mcis.tas_fa20;
 
 import org.junit.*;
-
 import java.sql.Timestamp;
-
 import static org.junit.Assert.*;
 
 public class PunchTest {
     @Test
     public void testPrintOriginalTimestamp() {
         Punch thePunch = new Punch(new Badge("FF591F68", "Miller, Robert K"), 2, 0);
-        thePunch.setOriginaltimestamp(1602457926);
+        thePunch.setOriginaltimestamp((long)1602457926 * 1000);
 
         assertEquals(
                 "#FF591F68 CLOCKED IN: SUN 10/11/2020 06:12:06",

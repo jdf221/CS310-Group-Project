@@ -2,6 +2,8 @@ package edu.jsu.mcis.tas_fa20;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 public class TASDatabase {
     private Connection connection = null;
@@ -45,7 +47,7 @@ public class TASDatabase {
 
             result.next();
             Punch punch = new Punch(this.getBadge(result.getString(3)), result.getInt(2), result.getInt(5));
-            punch.setOriginaltimestamp(result.getTimestamp(4).getTime());
+            punch.setOriginaltimestamp(result.getTimestamp(4).getTime() * 1000);
             punch.setId(result.getInt(1));
 
             return punch;
@@ -94,7 +96,7 @@ public class TASDatabase {
             insertPunch.setInt(1, punch.getId());
             insertPunch.setInt(2, punch.getTerminalid());
             insertPunch.setString(3, punch.getBadgeid());
-            insertPunch.setTimestamp(4, new java.sql.Timestamp(punch.getOriginaltimestamp()));
+            insertPunch.setTimestamp(4, new Timestamp(punch.getOriginaltimestamp()));
             insertPunch.setInt(5, punch.getPunchtypeid());
             insertPunch.executeUpdate();
 
@@ -109,7 +111,67 @@ public class TASDatabase {
     }
 
     public ArrayList<Punch> getDailyPunchList(Badge badge, long timestamp) {
-        return null;
+        try {
+            PreparedStatement selectPunchesOnDay = connection.prepareStatement("SELECT id FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ?");
+            PreparedStatement selectFirstPunchOnNextDay = connection.prepareStatement("SELECT id, punchtypeid FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ? ORDER BY originaltimestamp ASC");
+
+            GregorianCalendar firstDayBeginning = new GregorianCalendar();
+            firstDayBeginning.setTimeInMillis(timestamp);
+            firstDayBeginning.set(Calendar.HOUR_OF_DAY, 0);
+            firstDayBeginning.set(Calendar.MINUTE, 0);
+            firstDayBeginning.set(Calendar.SECOND, 0);
+            firstDayBeginning.set(Calendar.MILLISECOND, 0);
+
+            GregorianCalendar firstDayEnding = new GregorianCalendar();
+            firstDayEnding.setTimeInMillis(firstDayBeginning.getTimeInMillis());
+            firstDayBeginning.set(Calendar.HOUR_OF_DAY, 23);
+            firstDayBeginning.set(Calendar.MINUTE, 59);
+            firstDayBeginning.set(Calendar.SECOND, 59);
+            firstDayBeginning.set(Calendar.MILLISECOND, 999);
+
+            GregorianCalendar secondDayBeginning = new GregorianCalendar();
+            secondDayBeginning.add(Calendar.DAY_OF_MONTH, 1);
+            secondDayBeginning.setTimeInMillis(timestamp);
+            secondDayBeginning.set(Calendar.HOUR_OF_DAY, 0);
+            secondDayBeginning.set(Calendar.MINUTE, 0);
+            secondDayBeginning.set(Calendar.SECOND, 0);
+            secondDayBeginning.set(Calendar.MILLISECOND, 0);
+
+            GregorianCalendar secondDayEnding = new GregorianCalendar();
+            secondDayEnding.setTimeInMillis(secondDayBeginning.getTimeInMillis());
+            secondDayEnding.set(Calendar.HOUR_OF_DAY, 23);
+            secondDayEnding.set(Calendar.MINUTE, 59);
+            secondDayEnding.set(Calendar.SECOND, 59);
+            secondDayEnding.set(Calendar.MILLISECOND, 999);
+
+
+            selectPunchesOnDay.setString(1, badge.getBadgeId());
+            selectPunchesOnDay.setTimestamp(2, new Timestamp(firstDayBeginning.getTimeInMillis()));
+            selectPunchesOnDay.setTimestamp(3, new Timestamp(firstDayEnding.getTimeInMillis()));
+            ResultSet result = selectPunchesOnDay.executeQuery();
+
+            ArrayList<Punch> punchArray = new ArrayList<Punch>();
+            while(result.next()) {
+                punchArray.add(this.getPunch(result.getInt(1)));
+            }
+
+            selectFirstPunchOnNextDay.setString(1, badge.getBadgeId());
+            selectFirstPunchOnNextDay.setTimestamp(2, new Timestamp(secondDayBeginning.getTimeInMillis()));
+            selectFirstPunchOnNextDay.setTimestamp(3, new Timestamp(secondDayEnding.getTimeInMillis()));
+            ResultSet secondResult = selectFirstPunchOnNextDay.executeQuery();
+
+            System.out.println(selectFirstPunchOnNextDay);
+            secondResult.next();
+            int punchTypeId = secondResult.getInt(2);
+            if(punchTypeId == 1 || punchTypeId == 2) {
+                punchArray.add(this.getPunch(secondResult.getInt(1)));
+            }
+
+            return punchArray;
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            return null;
+        }
     }
 
     public void close() {
