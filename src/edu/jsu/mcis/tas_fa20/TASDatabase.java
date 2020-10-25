@@ -152,7 +152,7 @@ public class TASDatabase {
             ResultSet result = selectPunchesOnDay.executeQuery();
 
             ArrayList<Punch> punchArray = new ArrayList<Punch>();
-            while(result.next()) {
+            while (result.next()) {
                 punchArray.add(this.getPunch(result.getInt(1)));
             }
 
@@ -164,7 +164,7 @@ public class TASDatabase {
             secondResult.next();
             int punchTypeId = secondResult.getInt(2);
 
-            if(punchTypeId == 2 || punchTypeId == 3) {
+            if (punchTypeId == 2 || punchTypeId == 3) {
                 punchArray.add(this.getPunch(secondResult.getInt(1)));
             }
 
