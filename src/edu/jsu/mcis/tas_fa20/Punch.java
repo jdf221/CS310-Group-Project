@@ -56,6 +56,7 @@ public class Punch {
     private final GregorianCalendar adjustedInstant = new GregorianCalendar();
 
     private int punchId = -1;
+
     private String adjustmentType = "None";
 
     public Punch(Badge badge, int terminalId, int punchTypeId) {
@@ -82,6 +83,10 @@ public class Punch {
 
     public int getPunchtypeid() {
         return this.type.getRawId();
+    }
+
+    public String getAdjustmentType() {
+        return this.adjustmentType;
     }
 
     public void adjust(Shift shift) {
