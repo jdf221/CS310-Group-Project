@@ -74,7 +74,7 @@ public class TASDatabase {
     public Shift getShift(Badge badge) {
         try {
             PreparedStatement selectShiftId = connection.prepareStatement("SELECT shiftid FROM employee WHERE badgeid=?");
-            selectShiftId.setString(1, badge.getBadgeId());
+            selectShiftId.setString(1, badge.getId());
             ResultSet shiftIdResult = selectShiftId.executeQuery();
             shiftIdResult.next();
 
@@ -111,44 +111,73 @@ public class TASDatabase {
         }
     }
 
-    public ArrayList<Punch> getDailyPunchList(Badge badge, long timestamp) {
+    public void insertAbsenteeism(Absenteeism absenteeism) {
+        try {
+            PreparedStatement deleteAbsenteeism = connection.prepareStatement("DELETE FROM absenteeism WHERE badgeid=? AND payperiod=?");
+            deleteAbsenteeism.setString(1, absenteeism.badgeId);
+            deleteAbsenteeism.setTimestamp(2, new Timestamp(absenteeism.payPeriodStart.getTimeInMillis()));
+            deleteAbsenteeism.executeUpdate();
+
+            PreparedStatement insertAbsenteeism = connection.prepareStatement("INSERT INTO absenteeism VALUES(?,?,?)");
+            insertAbsenteeism.setString(1, absenteeism.badgeId);
+            insertAbsenteeism.setTimestamp(2, new Timestamp(absenteeism.payPeriodStart.getTimeInMillis()));
+            insertAbsenteeism.setDouble(3, absenteeism.percentage);
+            insertAbsenteeism.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println(e.toString());
+        }
+    }
+
+    public Absenteeism getAbsenteeism(String badgeId, long startTimestamp) {
+        try {
+            PreparedStatement selectAbsenteeism = connection.prepareStatement("SELECT * FROM absenteeism WHERE badgeid=? AND payperiod=?");
+            selectAbsenteeism.setString(1, badgeId);
+            selectAbsenteeism.setTimestamp(2, new Timestamp(startTimestamp));
+            ResultSet results = selectAbsenteeism.executeQuery();
+            results.next();
+
+            return new Absenteeism(results.getString(1), results.getTimestamp(2).getTime(), results.getDouble(3));
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            return null;
+        }
+    }
+
+    private ArrayList<Punch> getPunchListBetweenDates(Badge badge, GregorianCalendar startDate, GregorianCalendar endDate) {
         try {
             PreparedStatement selectPunchesOnDay = this.connection.prepareStatement("SELECT id FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ?");
             PreparedStatement selectFirstPunchOnNextDay = this.connection.prepareStatement("SELECT id, punchtypeid FROM punch WHERE badgeid=? AND originaltimestamp BETWEEN ? AND ? ORDER BY originaltimestamp ASC LIMIT 1");
 
-            GregorianCalendar firstDayBeginning = new GregorianCalendar();
-            firstDayBeginning.setTimeInMillis(timestamp);
-            firstDayBeginning.set(Calendar.HOUR_OF_DAY, 0);
-            firstDayBeginning.set(Calendar.MINUTE, 0);
-            firstDayBeginning.set(Calendar.SECOND, 0);
-            firstDayBeginning.set(Calendar.MILLISECOND, 0);
+            GregorianCalendar realFirstDate = (GregorianCalendar) startDate.clone();
+            realFirstDate.set(Calendar.HOUR_OF_DAY, 0);
+            realFirstDate.set(Calendar.MINUTE, 0);
+            realFirstDate.set(Calendar.SECOND, 0);
+            realFirstDate.set(Calendar.MILLISECOND, 0);
 
-            GregorianCalendar firstDayEnding = new GregorianCalendar();
-            firstDayEnding.setTimeInMillis(firstDayBeginning.getTimeInMillis());
-            firstDayEnding.set(Calendar.HOUR_OF_DAY, 23);
-            firstDayEnding.set(Calendar.MINUTE, 59);
-            firstDayEnding.set(Calendar.SECOND, 59);
-            firstDayEnding.set(Calendar.MILLISECOND, 999);
+            GregorianCalendar realEndDate = (GregorianCalendar) endDate.clone();
+            realEndDate.set(Calendar.HOUR_OF_DAY, 23);
+            realEndDate.set(Calendar.MINUTE, 59);
+            realEndDate.set(Calendar.SECOND, 59);
+            realEndDate.set(Calendar.MILLISECOND, 999);
 
-            GregorianCalendar secondDayBeginning = new GregorianCalendar();
-            secondDayBeginning.add(Calendar.DAY_OF_MONTH, 1);
-            secondDayBeginning.setTimeInMillis(timestamp);
-            secondDayBeginning.set(Calendar.HOUR_OF_DAY, 0);
-            secondDayBeginning.set(Calendar.MINUTE, 0);
-            secondDayBeginning.set(Calendar.SECOND, 0);
-            secondDayBeginning.set(Calendar.MILLISECOND, 0);
+            GregorianCalendar nextDayBeginning = (GregorianCalendar) endDate.clone();
+            nextDayBeginning.add(Calendar.DAY_OF_MONTH, 1);
+            nextDayBeginning.set(Calendar.HOUR_OF_DAY, 0);
+            nextDayBeginning.set(Calendar.MINUTE, 0);
+            nextDayBeginning.set(Calendar.SECOND, 0);
+            nextDayBeginning.set(Calendar.MILLISECOND, 0);
 
-            GregorianCalendar secondDayEnding = new GregorianCalendar();
-            secondDayEnding.setTimeInMillis(secondDayBeginning.getTimeInMillis());
-            secondDayEnding.set(Calendar.HOUR_OF_DAY, 23);
-            secondDayEnding.set(Calendar.MINUTE, 59);
-            secondDayEnding.set(Calendar.SECOND, 59);
-            secondDayEnding.set(Calendar.MILLISECOND, 999);
+            GregorianCalendar nextDayEnding = (GregorianCalendar) endDate.clone();
+            nextDayEnding.set(Calendar.HOUR_OF_DAY, 23);
+            nextDayEnding.set(Calendar.MINUTE, 59);
+            nextDayEnding.set(Calendar.SECOND, 59);
+            nextDayEnding.set(Calendar.MILLISECOND, 999);
 
 
-            selectPunchesOnDay.setString(1, badge.getBadgeId());
-            selectPunchesOnDay.setTimestamp(2, new Timestamp(firstDayBeginning.getTimeInMillis()));
-            selectPunchesOnDay.setTimestamp(3, new Timestamp(firstDayEnding.getTimeInMillis()));
+            selectPunchesOnDay.setString(1, badge.getId());
+            selectPunchesOnDay.setTimestamp(2, new Timestamp(realFirstDate.getTimeInMillis()));
+            selectPunchesOnDay.setTimestamp(3, new Timestamp(realEndDate.getTimeInMillis()));
             ResultSet result = selectPunchesOnDay.executeQuery();
 
             ArrayList<Punch> punchArray = new ArrayList<Punch>();
@@ -156,16 +185,18 @@ public class TASDatabase {
                 punchArray.add(this.getPunch(result.getInt(1)));
             }
 
-            selectFirstPunchOnNextDay.setString(1, badge.getBadgeId());
-            selectFirstPunchOnNextDay.setTimestamp(2, new Timestamp(secondDayBeginning.getTimeInMillis()));
-            selectFirstPunchOnNextDay.setTimestamp(3, new Timestamp(secondDayEnding.getTimeInMillis()));
+
+            selectFirstPunchOnNextDay.setString(1, badge.getId());
+            selectFirstPunchOnNextDay.setTimestamp(2, new Timestamp(nextDayBeginning.getTimeInMillis()));
+            selectFirstPunchOnNextDay.setTimestamp(3, new Timestamp(nextDayEnding.getTimeInMillis()));
             ResultSet secondResult = selectFirstPunchOnNextDay.executeQuery();
 
-            secondResult.next();
-            int punchTypeId = secondResult.getInt(2);
+            if(secondResult.next()) {
+                int punchTypeId = secondResult.getInt(2);
 
-            if (punchTypeId == 2 || punchTypeId == 3) {
-                punchArray.add(this.getPunch(secondResult.getInt(1)));
+                if (punchTypeId == 2 || punchTypeId == 3) {
+                    punchArray.add(this.getPunch(secondResult.getInt(1)));
+                }
             }
 
             return punchArray;
@@ -173,6 +204,32 @@ public class TASDatabase {
             System.err.println(e.toString());
             return null;
         }
+    }
+
+    public ArrayList<Punch> getDailyPunchList(Badge badge, long timestamp) {
+        GregorianCalendar date = new GregorianCalendar();
+        date.setTimeInMillis(timestamp);
+
+        return this.getPunchListBetweenDates(badge, date, date);
+    }
+
+    public ArrayList<Punch> getPayPeriodPunchList(Badge badge, long startTimestamp) {
+        GregorianCalendar startDate = new GregorianCalendar();
+        startDate.setTimeInMillis(startTimestamp);
+
+        while(startDate.get(GregorianCalendar.DAY_OF_WEEK) != GregorianCalendar.SUNDAY) {
+            startDate.add(GregorianCalendar.DAY_OF_MONTH, -1);
+        }
+
+        GregorianCalendar endDate = (GregorianCalendar) startDate.clone();
+        endDate.add(Calendar.DAY_OF_MONTH, 6);
+
+        System.out.println(badge.id);
+        System.out.println(startTimestamp);
+        System.out.println(endDate.getTimeInMillis());
+
+
+        return this.getPunchListBetweenDates(badge, startDate, endDate);
     }
 
     public void close() {
