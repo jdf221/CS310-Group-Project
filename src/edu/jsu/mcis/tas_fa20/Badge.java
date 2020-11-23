@@ -11,7 +11,7 @@ public class Badge {
         this.employeeName = employeeName;
     }
 
-    public String getBadgeId() {
+    public String getId() {
         // Here you need to return the badgeId
         return this.id;
     }

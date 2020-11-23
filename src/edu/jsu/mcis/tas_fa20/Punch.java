@@ -74,7 +74,7 @@ public class Punch {
     }
 
     public String getBadgeid() {
-        return this.badge.getBadgeId();
+        return this.badge.getId();
     }
 
     public int getTerminalid() {

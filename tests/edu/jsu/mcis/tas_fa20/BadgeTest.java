@@ -16,7 +16,7 @@ public class BadgeTest {
     public void testIdGetter() {
         assertEquals(
                 "FF591F68",
-                new Badge("FF591F68", "Miller, Robert K").getBadgeId()
+                new Badge("FF591F68", "Miller, Robert K").getId()
         );
     }
 }
