@@ -16,12 +16,14 @@ public class TASLogic {
             if (punch.type == Punch.PunchType.ClockIn) {
                 punchCount++;
                 lastInstant = punch.getAdjustedInstant();
-            } else if (punch.type == Punch.PunchType.ClockOut) {
+            } else if (punch.type == Punch.PunchType.ClockOut || punch.type == Punch.PunchType.TimeOut) {
                 punchCount++;
                 if (lastInstant != null) {
                     totalMinutes += TimeUnit.MINUTES.convert(Math.abs(punch.getAdjustedInstant().getTimeInMillis() - lastInstant.getTimeInMillis()), TimeUnit.MILLISECONDS);
                 }
             }
+
+            System.out.println(punch.getAdjustedInstant().get(Calendar.DAY_OF_MONTH) + " " + punch.type + " - " + totalMinutes);
         }
 
         if (punchCount == 2 && totalMinutes >= shift.shiftDuration) {
@@ -48,5 +50,17 @@ public class TASLogic {
         }
 
         return JSONValue.toJSONString(jsonData);
+    }
+
+    public static double calculateAbsenteeism(ArrayList<Punch> punchList, Shift shift) {
+        double workedMinutes = TASLogic.calculateTotalMinutes(punchList, shift);
+        double shiftMinutes = (shift.shiftDuration - shift.lunchDuration) * 5;
+
+        double workedPercent = -(((workedMinutes / shiftMinutes) * 100) - 100);
+        System.out.println(shiftMinutes);
+        System.out.println(workedMinutes);
+        System.out.println(workedPercent);
+
+        return workedPercent;
     }
 }
